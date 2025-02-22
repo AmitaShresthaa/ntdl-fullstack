@@ -1,11 +1,19 @@
 import express from "express"
-import { connectToMongoDb } from "./config/dbConfig.js";
+import { connectToMongoDb } from "./src/config/dbConfig.js";
 import taskRouter from "./src/router/taskRouter.js";
+import 'dotnev/config'
+import cors from "cors"
 
 const app = express()
 const PORT = 3000
 
 app.use(express.json());
+
+const corsOption = {
+    credential: true,
+    origin: true //Normally an array with the list of whitelist domains 
+}
+app.use(cors(corsOption))
 // connect to mongodb
 connectToMongoDb()
 

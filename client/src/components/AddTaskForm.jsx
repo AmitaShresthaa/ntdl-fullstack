@@ -1,24 +1,31 @@
 import { useState } from "react"
-import { generateRandomId } from "../Utility/generateRandomId"
+import { createTask } from "../../axios/taskAxios"
 
 const AddTaskForm = (props) =>{
 
-    const { setTaskList } = props
+    const { fetchTasks } = props
     const [taskName,setTaskName] = useState("")
     const [taskTime,setTaskTime] = useState("")
 
-    const handleOnSubmit = (e) =>{
+    const handleOnSubmit = async(e) =>{
         e.preventDefault()
 
         const taskObject = {
-            taskName: taskName,
-            taskTime: taskTime,
-            type: "entry",
-            id: generateRandomId(),
+            name: taskName,
+            timeToComplete: taskTime,
+            type: "Entry",
         }
-        setTaskList((prevState)=> [...prevState, taskObject])
-        setTaskName("")
-        setTaskTime("")
+
+        const response = await createTask(taskObject)
+        if(response.status === "success")
+        {
+          alert("Task created!")
+          // Form reset
+          setTaskName("")
+          setTaskTime("")
+          // Fetch the task list again to get the task list again 
+          fetchTasks()
+        }     
     }
     const  handleOnTaskNameChange = (e) =>{
         const inputValue = e.target.value

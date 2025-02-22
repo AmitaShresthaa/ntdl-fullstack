@@ -4,28 +4,56 @@ import AddTaskForm from './components/AddTaskForm'
 import Header from './components/Header'
 import TaskListItem from './components/TaskListItem'
 import TimeCalculator from './components/TImeCalculator'
+import { deleteTaskRequest, getTask, updateTaskType } from '../axios/taskAxios'
 function App() {
+  
+  const[taskList,setTaskList] = useState([])
 
-  const storeTaskList = JSON.parse(localStorage.getItem("taskList")) || []
-  const[taskList,setTaskList] = useState(storeTaskList)
   const[totalEntryTime, setTotalEntryTime] =  useState('0')
   const[totalWastedTime, setTotalWastedTime] = useState('0')
 
-  const entryTypeTask = taskList.filter(item => item.type === "entry")
+  const entryTypeTask = taskList.filter(item => item.type === "Entry")
   
-  const unwantedTypeTask = taskList.filter(item => item.type === "unwanted")
-  
-  const switchTaskType = (taskId) => {
-    const updatedTaskList  = taskList.map((task) => {
-          if(task.id === taskId){
-            task.type = task.type === "entry" ? "unwanted" : "entry"
-          }
-          return task
-        })
-        setTaskList(updatedTaskList)
-  }
-// adding up the entry task time
+  const unwantedTypeTask = taskList.filter(item => item.type === "Unwanted")
 
+  const fetchTasks = async() => {
+    const response = await getTask()
+    console.log("response array", response)
+    if(response.status === "success")
+    {
+      setTaskList(response.data)
+    }
+    
+  } 
+
+  useEffect(()=>{
+    // Initialize taskList state with data from database 
+    // To fetch data using API we have to send request 
+    fetchTasks()
+  },[])
+
+  
+  // const switchTaskType = (taskId) => {
+  //   const updatedTaskList  = taskList.map((task) => {
+  //         if(task.id === taskId){
+  //           task.type = task.type === "Entry" ? "Unwanted" : "entry"
+  //         }
+  //         return task
+  //       })
+  //       setTaskList(updatedTaskList)
+  // }
+     
+  const switchTaskType = async(task) => {
+    const updatedTaskType = task.type === 'Entry' ? 'Unwanted' : 'Entry'
+    const response = await updateTaskType(task._id, { type: updatedTaskType})
+      if(response.status === "success"){
+        fetchTasks()
+      }
+
+  }
+  
+
+  // adding up the entry task time
 useEffect(() => {
   let entryTime = 0;
   entryTypeTask.forEach((task) => {
@@ -43,19 +71,15 @@ useEffect(() => {
 }, [taskList]); // Add taskList to the dependency array
 
 
+// Delete | deleting tasks using their id
+  const deleteTask = async(taskId) => {
+  const response = await deleteTaskRequest(taskId)
 
-// setTotalWastedTime(sumOfUnwantedTime)
-
-  const deleteTask = (taskId) => {
-    const updatedTaskList  = taskList.filter((task) => task.id !== taskId)
-    setTaskList(updatedTaskList)
+    if(response.status === 'success')
+    {
+      fetchTasks()
+    }
   }
-
-  useEffect(()=>{
-    // update local storage when task list is updated
-    localStorage.setItem("taskList", JSON.stringify(taskList))
-  }, [taskList])
-
 
   return (
     <>
@@ -70,7 +94,7 @@ useEffect(() => {
             {/* <!--First Column--> */}
             <div className="col border p-4 rounded align-self-center">
               {/* <!--Form to collect user's input i.e task details--> */}
-             <AddTaskForm setTaskList={setTaskList}/>
+             <AddTaskForm fetchTasks={fetchTasks}/>
             </div>
             {/* <!--Second Column--> */}
             <div className="col border p-4 rounded">
@@ -82,7 +106,8 @@ useEffect(() => {
                 <table className="table table-hover border">
                   {/* <!---The table body content will be added by JS || adding rows from JS--> */}
                   <tbody>
-                    {entryTypeTask.map(item => <TaskListItem key={item.id} 
+                    {entryTypeTask.map(item => <TaskListItem 
+                      key={item.id} 
                       task = {item} 
                       switchTaskType = {switchTaskType}
                       deleteTask = {deleteTask}/> )}
@@ -100,7 +125,8 @@ useEffect(() => {
                 <table className="table table-hover border">
                   {/* <!---The table body content will be added by JS || adding rows from JS--> */}
                   <tbody>
-                    {unwantedTypeTask.map(item => <TaskListItem key={item.id} 
+                    {unwantedTypeTask.map(item => <TaskListItem 
+                      key={item.id} 
                       task = {item} 
                       switchTaskType = {item.id}
                       deleteTask = {deleteTask}/> )}

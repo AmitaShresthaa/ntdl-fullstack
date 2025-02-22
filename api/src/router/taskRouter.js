@@ -4,7 +4,7 @@ import { createTask, deleteTask, getTask, getTasks, updateTask } from "../model/
 const taskRouter = express.Router()
 
 // Index | Get Tasks
-taskRouter.get("", (req, res) => {
+taskRouter.get("/", (req, res) => {
     getTasks()
         .then(tasks => {
             res.json({
